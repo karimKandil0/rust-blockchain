@@ -13,31 +13,29 @@ impl BlockChain {
         }
     }
 
-    pub fn add_block(&mut self, data: String) {
-        let last_block = self.chain.last().unwrap();
+    pub fn add_block(&mut self, data: String) -> Result<(), &'static str> {
+        let last_block = self.chain.last().ok_or("chain is empty")?;
         let index = last_block.index + 1;
         let prev_hash: String = last_block.hash.clone();
 
         let new_block = Block::new(index, data, prev_hash);
 
-        self.chain.push(new_block)
+        self.chain.push(new_block);
+        Ok(())
     }
 
     pub fn is_valid(&self) -> bool {
-        for i in 1..self.chain.len() {
-            if self.chain[i - 1].hash != self.chain[i].prev_hash {
-                return false;
-            };
-
-            
-			let block = &self.chain[i];
-            let recalculated_hash = Block::calculate_hash(block.index, &block.timestamp, &block.prev_hash, &block.data);
+        for i in 0..self.chain.len() {
+            let block = &self.chain[i];
+            let recalculated_hash = block.calculate_hash();
             if recalculated_hash != block.hash {
-            	return false;
+                return false;
+            }
+            if i > 0 && block.prev_hash != self.chain[i - 1].hash {
+                return false;
             }
         }
 
         true
-
     }
 }

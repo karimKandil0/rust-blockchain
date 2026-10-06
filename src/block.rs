@@ -14,23 +14,22 @@ pub struct Block {
 impl Block {
     pub fn new(index: u64, data: String, prev_hash: String) -> Block {
         let timestamp = Utc::now();
-        let hash = Self::calculate_hash(index, &timestamp, &prev_hash, &data);
-        Block {
+        let mut block = Block {
             index,
             timestamp,
             prev_hash,
             data,
-            hash,
-        }
+            hash: String::new(),
+        };
+        block.hash = block.calculate_hash();
+
+        return block;
     }
 
-    pub fn calculate_hash(
-        index: u64,
-        timestamp: &DateTime<Utc>,
-        prev_hash: &str,
-        data: &str,
-    ) -> String {
-        let input = format!("{index}{timestamp}{prev_hash}{data}");
+    pub fn calculate_hash(&self) -> String {
+        let input =
+            serde_json::to_string(&(self.index, &self.timestamp, &self.prev_hash, &self.data))
+                .unwrap();
         let mut hasher = Sha256::new();
         hasher.update(input.as_bytes());
         hex::encode(hasher.finalize())
